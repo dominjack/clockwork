@@ -1,0 +1,8 @@
+[package]
+name = "clockwork"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chess_core = { version = "0.1.0", path = "../chess_core" }
+once_cell = "1.19"
