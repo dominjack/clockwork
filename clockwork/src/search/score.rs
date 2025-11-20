@@ -1,0 +1,68 @@
+use std::ops::Add;
+use std::ops::Mul;
+use std::ops::Neg;
+
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+#[repr(transparent)]
+pub struct Score(pub i32);
+
+impl Score {
+    pub const INVALID: Self = Self(-50000);
+
+    pub const INFINITY: Self = Self(50000);
+
+    pub const CHECKMATE: Self = Self(48000);
+    pub const CHECKMATE_LOWER_BOUND: Self = Self(47500);
+
+    pub const DRAW: Self = Self(0);
+
+    pub fn is_mating(self) -> bool {
+        self > Self::CHECKMATE_LOWER_BOUND
+    }
+
+    /// Returns `true` if the score represents getting mated by the opponent.
+    pub fn is_getting_mated(self) -> bool {
+        self < -Self::CHECKMATE_LOWER_BOUND
+    }
+
+    /// Returns the number of moves until checkmate, if the score represents a checkmate.
+    ///
+    /// Positive values indicate that the side to move is mating, and negative values indicate
+    /// that the side to move is getting mated.
+    pub fn checkmate_in(self) -> Option<i32> {
+        if self.is_mating() {
+            // (CHECKMATE.0 - self.0) gives ply. (ply + 1) / 2 gives moves.
+            return Some((Score::CHECKMATE.0 - self.0 + 1) / 2);
+        }
+        if self.is_getting_mated() {
+            // This maps, e.g., -48000 (mated in 0) to 0.
+            // And -47998 (mated in 2 ply) to -1 (mated in 1 move).
+            return Some((-Score::CHECKMATE.0 - self.0) / 2);
+        }
+        None
+    }
+}
+
+impl Neg for Score {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self(-self.0)
+    }
+}
+
+impl Mul<i32> for Score {
+    type Output = Self;
+
+    fn mul(self, other: i32) -> Self::Output {
+        Self(self.0 * other)
+    }
+}
+
+impl Add<i32> for Score {
+    type Output = Self;
+
+    fn add(self, other: i32) -> Self::Output {
+        Self(self.0 + other)
+    }
+}
