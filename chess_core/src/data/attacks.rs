@@ -1,5 +1,4 @@
-// This file is auto-generated. Do not edit manually.
-// Run the program containing precalc_magics_to_file to regenerate it.
+
 
 pub static BISHOP_ATTACKS: [u64; 12141] = [
     0x8040201008040200,

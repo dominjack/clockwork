@@ -3,10 +3,6 @@ use clockwork::{
     engine::Engine,
 };
 
-/// The main entry point for the clockwork chess engine.
-///
-/// This function initializes the `Engine` and then enters a loop to read and parse UCI commands
-/// from standard input. It executes the commands until the `Quit` command is received.
 fn main() {
     let mut engine = Engine::new();
 

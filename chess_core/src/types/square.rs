@@ -1,5 +1,3 @@
-/// Represents a square on the chessboard.
-/// The enum variants are ordered from A1 to H8.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[rustfmt::skip]
 pub enum Square {
@@ -14,25 +12,20 @@ pub enum Square {
 }
 
 impl Square {
-    /// The number of squares on the board.
     pub const COUNT: usize = 64;
 
-    /// Creates a new `Square` from a `u8` value (0-63).
     pub fn new(value: u8) -> Self {
         unsafe { std::mem::transmute(value) }
     }
 
-    /// Creates a new `Square` from a rank and file (0-7).
     pub fn from_rank_file(rank: u8, file: u8) -> Self {
         Self::new((rank << 3) | file)
     }
 
-    /// Converts the square to its `u8` index (0-63).
     pub fn to_index(self) -> u8 {
         self as u8
     }
 
-    /// Converts the square to its algebraic notation (e.g., "e4").
     pub fn to_algebraic(self) -> Option<String> {
         let idx = self.to_index();
         match idx {
@@ -45,23 +38,19 @@ impl Square {
         }
     }
 
-    /// Shifts the square by a given amount.
     pub fn shift(&self, shift: i8) -> Self {
         let index = self.to_index();
         Square::new((index as i8 + shift) as u8)
     }
 
-    /// Gets the rank of the square (1-8).
     pub fn rank(&self) -> u8 {
         (self.to_index() / 8 + 1) as u8
     }
 
-    /// Gets the file of the square (1-8).
     pub fn file(&self) -> u8 {
         (self.to_index() % 8 + 1) as u8
     }
 
-    /// Converts the square to a bitboard with a single bit set at the square's index.
     pub fn to_bitboard(self) -> crate::types::bitboard::Bitboard {
         crate::types::bitboard::Bitboard(1 << self.to_index())
     }
@@ -74,7 +63,6 @@ impl Square {
     }
 }
 
-/// Parses a square from its algebraic notation (e.g., "e4").
 impl TryFrom<&str> for Square {
     type Error = ();
 

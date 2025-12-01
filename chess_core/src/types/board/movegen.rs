@@ -18,31 +18,24 @@ const NOISY: u8 = 1;
 const QUIET: u8 = 0;
 
 impl Board {
-    /// Generates all noisy (capture and promotion) moves.
     pub fn generate_noisy_moves(&mut self) -> MoveList {
         let mut list = MoveList::new();
         self.append_noisy_moves(&mut list);
         list
     }
 
-    /// Generates all quiet (non-capture and non-promotion) moves.
     pub fn generate_quiet_moves(&mut self) -> MoveList {
         let mut list = MoveList::new();
         self.append_quiet_moves(&mut list);
         list
     }
 
-    /// Generates all legal moves for the current position.
     pub fn generate_all_moves(&mut self) -> MoveList {
         let mut list = MoveList::new();
         self.append_all_moves(&mut list);
         list
     }
 
-    /// Pre-calculates checker and pinner information for the current position.
-    /// This is done once before generating moves to avoid redundant calculations.
-    /// Pre-calculates checker and pinner information for the current position.
-    /// This is done once before generating moves to avoid redundant calculations.
     fn prepare_move_generation(&mut self) {
         // Do not calculate the checkers again if they already exist. This needs to ba handled properly but leads to a 10% increase in perft nps.
         if self.state.num_checker.is_none() {
@@ -52,10 +45,6 @@ impl Board {
         }
     }
 
-    /// Orchestrates the generation of legal moves of a specific type (noisy or quiet).
-    /// It uses a target_mask to handle check evasion, but does not check for pinners.
-    /// Orchestrates the generation of legal moves of a specific type (noisy or quiet).
-    /// It uses a target_mask to handle check evasion, but does not check for pinners.
     fn generate_moves<const TYPE: u8>(&mut self, list: &mut MoveList) {
         let occupancies = self.occupied();
         let mut target_mask = Bitboard::FULL;
@@ -99,27 +88,22 @@ impl Board {
         }
     }
 
-    /// Appends all legal moves to the given move list.
     pub fn append_all_moves(&mut self, list: &mut MoveList) {
         self.prepare_move_generation();
         self.generate_moves::<NOISY>(list);
         self.generate_moves::<QUIET>(list);
     }
 
-    /// Appends all quiet moves to the given move list.
     pub fn append_quiet_moves(&mut self, list: &mut MoveList) {
         self.prepare_move_generation();
         self.generate_moves::<QUIET>(list);
     }
 
-    /// Appends all noisy moves to the given move list.
     pub fn append_noisy_moves(&mut self, list: &mut MoveList) {
         self.prepare_move_generation();
         self.generate_moves::<NOISY>(list);
     }
 
-    /// Collects legal moves for a given piece type, handling pins and checks.
-    /// This is a generic function for all pieces except pawns.
     pub fn collect_moves<const TYPE: u8, T>(
         &self,
         list: &mut MoveList,
@@ -148,7 +132,6 @@ impl Board {
         }
     }
 
-    /// Collects legal moves for kings, handling pins and checks.
     pub fn collect_king_moves<const TYPE: u8, T>(&self, list: &mut MoveList, generator: T)
     where
         T: Fn(Square) -> Bitboard,
@@ -172,7 +155,6 @@ impl Board {
         }
     }
 
-    /// Collects all legal pawn moves (pushes, captures, promotions, en-passant).
     pub fn collect_pawn_moves<const TYPE: u8>(&self, list: &mut MoveList, target_mask: Bitboard) {
         let pawns = self.pieces[PieceType::Pawn as usize] & self.us();
         let before_promotion = match self.state.color {
@@ -188,7 +170,6 @@ impl Board {
         }
     }
 
-    /// Collects legal pawn pushes (single, double, and promotions).
     pub fn collect_pawn_pushes<const TYPE: u8>(
         &self,
         list: &mut MoveList,
@@ -236,7 +217,6 @@ impl Board {
         }
     }
 
-    /// Collects legal pawn captures (including promotion captures).
     fn collect_pawn_captures<const TYPE: u8>(
         &self,
         list: &mut MoveList,
@@ -281,7 +261,6 @@ impl Board {
         }
     }
 
-    /// Collects legal en-passant moves, including a check for discovered attacks.
     fn collect_en_passant_moves(&self, list: &mut MoveList, pawns: Bitboard) {
         if let Some(ep) = self.state.en_passant {
             let attacks = pawns & lookup_pawn_captures(ep, self.state.color.invert());
@@ -296,8 +275,6 @@ impl Board {
         }
     }
 
-    /// Checks if a square is attacked by the given color.
-    /// The color is the color of the piece that would be on the square.
     pub fn is_square_attacked(&self, square: Square, color: Color) -> bool {
         let occupancies = self.them() | self.us();
 
@@ -317,7 +294,6 @@ impl Board {
         !(possible_attackers & self.colors[color as usize]).is_empty()
     }
 
-    /// Collects legal castling moves.
     pub fn collect_castling(&self, list: &mut MoveList) {
         let color = self.state.color;
         let possiblities = self.state.castling.get_castling_possibilities(color);
@@ -337,8 +313,6 @@ impl Board {
         }
     }
 
-    /// Gets the bitboard of checking pieces and the number of checkers.
-    /// Gets the bitboard of checking pieces and the number of checkers.
     pub fn get_checker(&self) -> (Bitboard, u8) {
         let mut num_checkers = 0u8;
         let mut checkers = Bitboard(0);

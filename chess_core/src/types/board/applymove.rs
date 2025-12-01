@@ -13,7 +13,6 @@ use crate::types::square::Square;
 pub struct IllegalMoveError;
 
 impl Board {
-    /// Applies a normal (non-capture) move to the board.
     fn move_normal(&mut self, mv: &Move) {
         let from = mv.from();
         let to = mv.to();
@@ -35,7 +34,6 @@ impl Board {
         self.state.hash ^= ZOBRIST_KEYS.piece_keys[piece as usize][to as usize];
     }
 
-    /// Applies a capture move to the board.
     fn move_capture(&mut self, mv: &Move) {
         let from = mv.from();
         let to = mv.to();
@@ -55,7 +53,6 @@ impl Board {
         self.state.hash ^= ZOBRIST_KEYS.piece_keys[p_to as usize][to as usize];
     }
 
-    /// Applies a double pawn push to the board, setting the en-passant square.
     fn move_double_push(&mut self, mv: &Move) {
         let from = mv.from();
         let to = mv.to();
@@ -85,7 +82,6 @@ impl Board {
         self.state.hash ^= ZOBRIST_KEYS.piece_keys[piece as usize][to as usize];
     }
 
-    /// Applies a kingside castling move.
     fn move_king_castle(&mut self, mv: &Move) {
         let from = mv.from();
         let to = mv.to();
@@ -119,7 +115,6 @@ impl Board {
         }
     }
 
-    /// Applies a queenside castling move.
     fn move_queen_castle(&mut self, mv: &Move) {
         let from = mv.from();
         let to = mv.to();
@@ -153,7 +148,6 @@ impl Board {
         }
     }
 
-    /// Applies an en-passant capture.
     fn move_en_passant(&mut self, mv: &Move) {
         let from = mv.from();
         let to = mv.to();
@@ -188,7 +182,6 @@ impl Board {
         self.state.hash ^= ZOBRIST_KEYS.piece_keys[piece as usize][to as usize];
     }
 
-    /// Applies a promotion move.
     fn move_promotion(&mut self, mv: &Move, promotion_piece: Piece) {
         let from = mv.from();
         let to = mv.to();
@@ -205,7 +198,6 @@ impl Board {
         self.state.hash ^= ZOBRIST_KEYS.piece_keys[promotion_piece as usize][to as usize];
     }
 
-    /// Applies a promotion with capture.
     fn move_promotion_capture(&mut self, mv: &Move, promotion_piece: Piece) {
         let from = mv.from();
         let to = mv.to();
@@ -222,7 +214,6 @@ impl Board {
         self.state.hash ^= ZOBRIST_KEYS.piece_keys[promotion_piece as usize][to as usize];
     }
 
-    /// Dispatches to the correct move function based on the move type.
     fn move_pieces(&mut self, mv: &Move) {
         let kind = mv.kind();
         let color = self.state.color;
@@ -322,7 +313,6 @@ impl Board {
         }
     }
 
-    /// Applies a move to the board, updating the board state and Zobrist hash.
     pub fn apply_move(&mut self, mv: &Move) -> Result<(), IllegalMoveError> {
         // Save the current state for undo_move.
         self.history.push(self.state);
@@ -363,7 +353,6 @@ impl Board {
         Ok(())
     }
 
-    /// Undoes a move, restoring the board to its previous state.
     pub fn undo_move(&mut self, mv: &Move) {
         let from = mv.from();
         let to = mv.to();

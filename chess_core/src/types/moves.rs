@@ -4,15 +4,9 @@ use crate::types::square::Square;
 use core::fmt;
 use std::mem;
 
-/// Represents a chess move.
-/// The move is encoded into a 16-bit integer.
-/// - Bits 0-5: destination square (0-63)
-/// - Bits 6-11: origin square (0-63)
-/// - Bits 12-15: move type (see `MoveType` enum)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct Move(pub u16);
 
-/// Represents the type of a move.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MoveType {
     Normal = 0,
@@ -32,10 +26,8 @@ pub enum MoveType {
 }
 
 impl Move {
-    /// A null move, used to represent no move.
     pub const NONE: Self = Self(0);
 
-    /// Creates a new `Move` from an origin square, destination square, and move type.
     pub fn new(from: u8, to: u8, kind: MoveType) -> Self {
         let mut move_value = 0 as u16;
         move_value |= (from as u16) << 6;
@@ -44,37 +36,34 @@ impl Move {
         Self(move_value)
     }
 
-    /// Creates a new `Move` from `Square` objects.
     pub fn new_from_squares(from: Square, to: Square, kind: MoveType) -> Self {
         Self::new(from as u8, to as u8, kind)
     }
 
-    /// Gets the origin square of the move.
+    pub fn squares_index(&self) -> usize {
+        (self.0 & 0xfff) as usize
+    }
+
     pub fn from(&self) -> u8 {
         ((self.0 >> 6) & 0x3F) as u8
     }
 
-    /// Gets the destination square of the move.
     pub fn to(&self) -> u8 {
         (self.0 & 0x3F) as u8
     }
 
-    /// Gets the destination square as a `Square` object.
     pub fn to_sq(&self) -> Square {
         Square::new(self.to())
     }
 
-    /// Gets the origin square as a `Square` object.
     pub fn from_sq(&self) -> Square {
         Square::new(self.from())
     }
 
-    /// Gets the type of the move.
     pub fn kind(&self) -> MoveType {
         unsafe { mem::transmute((self.0 >> 12) as u8) }
     }
 
-    /// Converts the move to a simple string representation (e.g., "e2e4").
     pub fn to_string(&self) -> String {
         format!(
             "{}{}",
@@ -83,12 +72,10 @@ impl Move {
         )
     }
 
-    /// Checks if the move is a promotion.
     pub fn is_promotion(&self) -> bool {
         (self.0 >> 12) > 7
     }
 
-    /// Checks if the move is a capture.
     pub fn is_capture(&self) -> bool {
         let kind = self.kind() as u8;
         kind >= 12 || kind == 5 || kind == 4
@@ -105,7 +92,6 @@ impl Move {
 }
 
 impl Move {
-    /// Creates a `Move` from a LAN (Long Algebraic Notation) string (e.g., "e2e4", "g1f3", "a7a8q").
     pub fn from_lan(board: &Board, uci: &str) -> Self {
         let mut _board = board.clone();
         let mut promotion_str = "";
@@ -160,7 +146,6 @@ impl Move {
         panic!("Invalid move: {}", uci)
     }
 
-    /// Converts the move to a LAN (Long Algebraic Notation) string.
     pub fn to_lan(self) -> String {
         let mut promotion_str = "";
 

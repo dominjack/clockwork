@@ -11,12 +11,14 @@ use crate::search::thread::SearchThread;
 
 type OrderMap = Vec<(Move, u16)>;
 
-const AB_METHODS: &[OrderMethod] = &[OrderMethod::Cache, OrderMethod::MvvLva];
+const AB_METHODS: &[OrderMethod] = &[OrderMethod::Cache, OrderMethod::MvvLva, OrderMethod::Killers, OrderMethod::History];
 const Q_METHODS: &[OrderMethod] = &[OrderMethod::MvvLva];
 
 pub enum OrderMethod {
     Cache,
     MvvLva,
+    History,
+    Killers
 }
 
 pub struct MoveOrder {
@@ -28,7 +30,7 @@ impl MoveOrder {
     pub fn absearch(board: &mut Board, ply: usize, thread: &SearchThread) -> Self {
         let binding = thread.tt.lock().unwrap();
         let cached = binding
-            .probe(board.state.hash, ply as u8)
+            .probe(board.state.hash, ply)
             .map(|entry| entry.best_move);
         let moves = board.generate_all_moves();
         Self::build(cached, AB_METHODS, board, ply, thread, &moves)
@@ -52,23 +54,16 @@ impl MoveOrder {
     ) -> Self {
         let mut map: OrderMap = Vec::with_capacity(moves.len());
         for &mv in moves.iter() {
-            let score = score(mv, cached, methods, board);
+            let score = score(mv, cached, methods, board, thread, ply);
             map.push((mv, score));
         }
+        map.sort_unstable_by(|a, b| b.1.cmp(&a.1));
         Self { map, index: 0 }
     }
 
-    /// Returns the next most rated `Move` or `None` if there are no moves left.
     pub fn next(&mut self) -> Option<Move> {
-        if self.index == self.map.len() {
+        if self.index >= self.map.len() {
             return None;
-        }
-
-        // Compare the current move rating with all others and swap if it's lower
-        for next in (self.index + 1)..self.map.len() {
-            if self.map[self.index].1 < self.map[next].1 {
-                self.map.swap(self.index, next);
-            }
         }
 
         let best = self.map[self.index].0;
@@ -77,20 +72,7 @@ impl MoveOrder {
     }
 }
 
-/// Calculates a score for a move based on a set of ordering methods.
-///
-/// A higher score indicates a better move.
-///
-/// # Arguments
-/// * `mv` - The move to score.
-/// * `cached` - The best move from the transposition table, if available.
-/// * `methods` - A slice of `OrderMethod` enums to use for scoring.
-/// * `board` - The current board state.
-///
-/// # Returns
-/// The score of the move.
-pub fn score(mv: Move, cached: Option<Move>, methods: &[OrderMethod], board: &Board) -> u16 {
-    let score = 0u16;
+pub fn score(mv: Move, cached: Option<Move>, methods: &[OrderMethod], board: &Board, thread: &SearchThread, ply:usize) -> u16 {
     for method in methods {
         match method {
             OrderMethod::Cache => {
@@ -103,9 +85,20 @@ pub fn score(mv: Move, cached: Option<Move>, methods: &[OrderMethod], board: &Bo
                     return value;
                 }
             }
+            OrderMethod::Killers => {
+                //println!("Probing {}, {}", mv, ply);
+                if let Some(value) = thread.heuristics.killers.probe(mv, ply) {
+                    return value;
+                }
+            }
+            OrderMethod::History => {
+                if let Some(value) = thread.heuristics.history.probe(mv) {
+                    return value;
+                }
+            }
         }
     }
-    score
+    0
 }
 
 fn mvvlva_score(mv: Move, board: &Board) -> Option<u16> {
@@ -126,17 +119,15 @@ fn mvvlva_score(mv: Move, board: &Board) -> Option<u16> {
     return Some(MVV_LVA[attacker as usize][victim as usize]);
 }
 
-const TT_MOVE: u16 = 2000;
+const TT_MOVE: u16 = 5000;
 
-/// Quiet killer move is rated below any capture move from MVV-LVA
-const KILLER_MOVE: u16 = 1000;
 
 /// Most Valuable Victim – Least Valuable Attacker heuristic table indexed by `[attacker][victim]`.
 const MVV_LVA: [[u16; PieceType::COUNT]; PieceType::COUNT] = [
-    [1015, 1025, 1035, 1045, 1055, 1065],
-    [1014, 1024, 1034, 1044, 1054, 1064],
-    [1013, 1023, 1033, 1043, 1053, 1063],
-    [1012, 1022, 1032, 1042, 1052, 1062],
-    [1011, 1021, 1031, 1041, 1051, 1061],
-    [1010, 1020, 1030, 1040, 1050, 1060],
+    [4015, 4025, 4035, 4045, 4055, 4065],
+    [1014, 4024, 4034, 4044, 4054, 4064],
+    [1013, 1023, 4033, 4043, 4053, 4063],
+    [1012, 1022, 1032, 4042, 4052, 4062],
+    [1011, 1021, 1031, 1041, 4051, 4061],
+    [1010, 1020, 1030, 1040, 1050, 4060],
 ];

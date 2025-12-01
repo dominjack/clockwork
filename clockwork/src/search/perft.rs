@@ -2,10 +2,6 @@ use std::time::Instant;
 
 use chess_core::types::board::board::Board;
 
-/// A function for performance testing and debugging of the move generation.
-/// Perft (performance test) is a standard test for chess engines that counts the
-/// number of legal moves from a given position to a certain depth.
-/// It is used to verify the correctness of the move generation.
 pub fn perft(board: &mut Board, ply: u8) -> Result<u64, ()> {
     if ply == 0 {
         return Ok(1);
@@ -24,17 +20,6 @@ pub fn perft(board: &mut Board, ply: u8) -> Result<u64, ()> {
     Ok(num_nodes)
 }
 
-/// Initiates and manages a perft test from a given board state to a specified depth.
-///
-/// This function prints the progress of the perft test to the console, including a breakdown
-/// of nodes per move at the first level. It also prints a summary at the end of the test.
-///
-/// # Arguments
-/// * `board` - The starting board state.
-/// * `ply` - The depth of the perft test.
-///
-/// # Returns
-/// The total number of leaf nodes found during the perft test.
 pub fn start_perft(board: &mut Board, ply: u8) -> u64 {
     if ply == 0 {
         return 0;
@@ -43,12 +28,12 @@ pub fn start_perft(board: &mut Board, ply: u8) -> u64 {
     let moves = board.generate_all_moves();
 
     println!("Starting perft depth {} on fen {}", ply, board.to_fen());
-    println!("|-------------------------------------------------------------|");
+    println!("+-------------------------------------------------------------+");
     println!(
         "{:>5} {:>7} {:>12} {:>13} {:>15}",
         "Nr.", "Move", "Nodes", "Elapsed", "NPS"
     );
-    println!("|-------------------------------------------------------------|");
+    println!("+-------------------------------------------------------------+");
 
     let stopwatch = Instant::now();
 
@@ -73,14 +58,14 @@ pub fn start_perft(board: &mut Board, ply: u8) -> u64 {
             }
         }
     }
-    println!("|-------------------------------------------------------------|");
+    println!("+-------------------------------------------------------------+");
     println!(
         "|    Total: {:>14} {:>12.3}s {:>15.3} kN/s |",
         num_nodes,
         stopwatch.elapsed().as_secs_f32(),
         (num_nodes as f32) / 1000. / (stopwatch.elapsed().as_secs_f32())
     );
-    println!("|-------------------------------------------------------------|");
+    println!("+-------------------------------------------------------------+");
 
     num_nodes
 }

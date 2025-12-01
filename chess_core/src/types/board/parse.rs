@@ -62,7 +62,6 @@ impl fmt::Display for Board {
     }
 }
 
-/// Parses a FEN string and creates a `Board` from it.
 impl Board {
     pub fn from_fen(fen: &str) -> Result<Self, FenError> {
         let mut parts = fen.split_whitespace();
@@ -146,7 +145,6 @@ impl Board {
         Ok(board)
     }
 
-    /// Converts the board to a FEN string.
     pub fn to_fen(&self) -> String {
         let mut fen = String::with_capacity(90);
 

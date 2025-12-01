@@ -1,5 +1,4 @@
-//! This module contains the core chess engine logic, including the search algorithm,
-//! evaluation function, and transposition table.
+
 
 pub mod absearch;
 pub mod config;
@@ -12,3 +11,4 @@ pub mod thread;
 pub mod timecontrol;
 pub mod transposition;
 pub mod variation;
+pub mod heuristics;

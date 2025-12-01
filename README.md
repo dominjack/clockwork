@@ -81,23 +81,34 @@ cargo run --release --bin magicgen
 ```
 
 ## Playing strength
-The engine is not rated by [CCRL](https://www.computerchess.org.uk/ccrl/). The best estimation from playing against [Stockfish](https://github.com/official-stockfish/Stockfish) with different elo settings is between **1900** and **2100** elo.
+The engine is not rated by [CCRL](https://www.computerchess.org.uk/ccrl/). The best estimation from playing against [Stockfish](https://github.com/official-stockfish/Stockfish) with different elo settings is around **2500** elo against humans. 
+
+From testing against [Rustic](https://rustic-chess.org/front_matter/about_rustic.html) and [Lux](https://github.com/Sidhant-Roymoulik/Lux), the CCRL elo can be estimated between **2050** and **2150**.
 
 
 ## Features
 
--   **Bitboard Representation:** A fast and efficient board representation.
--   **Magic Bitboards:** For fast generation of sliding piece moves.
--   **Zobrist Hashing:** For efficient transposition table lookups.
+- **Architecture and move generation**:
+  -   **Bitboard Representation:** A fast and efficient board representation.
+  -   **Magic Bitboards:** For fast generation of sliding piece moves.
+  -   **Zobrist Hashing:** For efficient transposition table lookups.
+- **Search**:
+  -   **Alpha-Beta Search:** With quiescence search to avoid the horizon effect.
+  -   **Transposition Tables:** To cache previously searched positions.
+  -   **Iterative Deepening:** To provide early results and improve search efficiency.
+  -   **Move Ordering:** Including MVV-LVA and other heuristics to improve search performance.
+  -   **Late Move Reductions:** Save time on bad moves.
+  -   **Check Extensions:** Make sure to not end search in check.
+  -   **Killer Moves:** Prefer searching nodes that beta cuts.
+  -   **History Heuristics:** Prefer searching nodes that raise alpha.
+  -   **PeSTO Tables:** Use optimized Piece Square Tables.
+  -   **Null Move Pruning:** Limiting search space by shallow search after passing move.
 -   **UCI Protocol:** For communication with GUIs.
--   **Alpha-Beta Search:** With quiescence search to avoid the horizon effect.
--   **Transposition Tables:** To cache previously searched positions.
--   **Iterative Deepening:** To provide early results and improve search efficiency.
--   **Move Ordering:** Including MVV-LVA and other heuristics to improve search performance.
 
 ## Roadmap
 
 - [ ] Improve evaluation function with more advanced concepts.
+- [ ] Tune evaluation parameters.
 - [ ] Implement more advanced search techniques.
 - [ ] Add support for multi-threading.
 
@@ -113,8 +124,8 @@ Don't forget to give the project a star! Thanks!
 5.  Open a Pull Request
 
 ## Acknowledgements
-- [Cutechess](https://github.com/cutechess/cutechess) for engine testing 
-- [Stockfish](https://github.com/official-stockfish/Stockfish), [Reckless](https://github.com/codedeliveryservice/Reckless/tree/main) and various other engines
+- [Cutechess](https://github.com/cutechess/cutechess) and [Fastchess](https://github.com/Disservin/fastchess.git) for engine testing 
+- [Stockfish](https://github.com/official-stockfish/Stockfish), [Reckless](https://github.com/codedeliveryservice/Reckless/tree/main), [Rustic](https://rustic-chess.org/front_matter/about_rustic.html) and many other engines
 - [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
 
 ## License

@@ -23,10 +23,6 @@ pub struct Engine {
 }
 
 impl Engine {
-    /// Creates a new `Engine`.
-    ///
-    /// The engine is initialized with the starting board position, a default configuration,
-    /// and a new transposition table.
     pub fn new() -> Self {
         let config: EngineConfig = Default::default();
         Engine {
@@ -37,7 +33,6 @@ impl Engine {
         }
     }
 
-    /// Sets the board position from a FEN string and a list of moves.
     pub fn set_position(&mut self, fen: String, moves: Vec<String>) -> Result<(), FenError> {
         self.board = Board::from_fen(&fen)?;
         for mv in moves {
@@ -47,18 +42,15 @@ impl Engine {
         Ok(())
     }
 
-    /// Sets the terminator to the given value.
     pub fn set_terminator(&mut self, set: bool) {
         self.terminator.store(set, Ordering::Relaxed);
     }
 
-    /// Resets the engine to its initial state.
     pub fn reset(&mut self) {
         self.board = Board::start();
         self.set_terminator(false);
     }
 
-    /// Starts the search.
     pub fn go(&mut self, time_control: TimeControl) {
         self.terminator.store(false, Ordering::Relaxed);
         let mut thread =
@@ -70,7 +62,6 @@ impl Engine {
         });
     }
 
-    /// Starts the perft.
     pub fn perft(&mut self, depth: u8) {
         let mut board = self.board.clone();
         thread::spawn(move || {
@@ -78,12 +69,10 @@ impl Engine {
         });
     }
 
-    /// Evaluates the current board position and prints the score.
     pub fn eval(&mut self) {
         println!("{}", evaluate_for(&self.board, self.board.state.color).0)
     }
 
-    /// Executes a UCI command.
     pub fn execute(&mut self, command: UciCommand) {
         match command {
             UciCommand::UciNewGame => self.reset(),
@@ -95,7 +84,25 @@ impl Engine {
             },
             UciCommand::Quit => self.set_terminator(true),
             UciCommand::Stop => self.set_terminator(true),
-            UciCommand::SetOption => (),
+            UciCommand::SetOption { name, value } => {
+                if let Some(val) = value {
+                    match name.as_str() {
+                        "Hash" => {
+                            if let Ok(mb) = val.parse::<usize>() {
+                                self.config.tt_size_mb = mb;
+                                let mut tt = self.cache.lock().unwrap();
+                                *tt = TranspositionTable::new(mb);
+                            }
+                        }
+                        "Threads" => {
+                            if let Ok(threads) = val.parse::<usize>() {
+                                self.config.threads = threads;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
             UciCommand::Hash => (),
             UciCommand::Go { time_control } => {
                 self.go(time_control);
@@ -108,7 +115,6 @@ impl Engine {
     }
 }
 
-/// Prints the UCI handshake information to the console.
 fn uci_handshake() {
     println!("id name Clockwork");
     println!("id author Dominik Schiwietz");

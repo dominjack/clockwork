@@ -10,7 +10,7 @@ use std::{
 use chess_core::types::{board::board::Board, moves::Move};
 
 use crate::search::{
-    timecontrol::TimeControl, transposition::TranspositionTable, variation::Variation,
+    heuristics::Heuristics, timecontrol::TimeControl, transposition::TranspositionTable, variation::Variation
 };
 
 pub struct SearchThread {
@@ -21,10 +21,10 @@ pub struct SearchThread {
     pub nodes: u32,
     pub current_depth: usize,
     pub seldepth: usize,
+    pub heuristics: Heuristics,
 }
 
 impl SearchThread {
-    /// Creates a new `SearchThread`.
     pub fn new(
         tc: TimeControl,
         tt: Arc<Mutex<TranspositionTable>>,
@@ -38,27 +38,24 @@ impl SearchThread {
             nodes: 0,
             current_depth: 0,
             seldepth: 0,
+            heuristics: Heuristics::new(),
         };
     }
 
-    /// Returns the value of the terminator.
     pub fn get_terminator(&self) -> bool {
         self.terminator.load(Ordering::Relaxed)
     }
 
-    /// Sets the value of the terminator.
     pub fn set_terminator(&self, val: bool) {
         self.terminator.store(val, Ordering::Relaxed)
     }
 
-    /// Checks if the search is over.
     pub fn is_over(&self) -> bool {
         self.tc
             .is_over(self.current_depth, self.start_time.elapsed())
             || self.terminator.load(Ordering::Relaxed)
     }
 
-    /// Recursively constructs the principal variation.
     pub fn get_pv(&self, board: &mut Board, depth: usize, variation: &mut Variation) {
         if depth == 0 {
             return;
@@ -73,7 +70,6 @@ impl SearchThread {
         }
     }
 
-    /// Gets the principal variation move from the transposition table for the current board state.
     pub fn get_pv_move(&self, board: &Board) -> Option<Move> {
         let binding = self.tt.lock().unwrap();
         let entry = binding.probe(board.state.hash, 0);

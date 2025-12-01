@@ -1,6 +1,8 @@
 use std::ops::Add;
+use std::ops::AddAssign;
 use std::ops::Mul;
 use std::ops::Neg;
+use std::ops::SubAssign;
 
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 #[repr(transparent)]
@@ -20,15 +22,10 @@ impl Score {
         self > Self::CHECKMATE_LOWER_BOUND
     }
 
-    /// Returns `true` if the score represents getting mated by the opponent.
     pub fn is_getting_mated(self) -> bool {
         self < -Self::CHECKMATE_LOWER_BOUND
     }
 
-    /// Returns the number of moves until checkmate, if the score represents a checkmate.
-    ///
-    /// Positive values indicate that the side to move is mating, and negative values indicate
-    /// that the side to move is getting mated.
     pub fn checkmate_in(self) -> Option<i32> {
         if self.is_mating() {
             // (CHECKMATE.0 - self.0) gives ply. (ply + 1) / 2 gives moves.
@@ -64,5 +61,17 @@ impl Add<i32> for Score {
 
     fn add(self, other: i32) -> Self::Output {
         Self(self.0 + other)
+    }
+}
+
+impl AddAssign<i32> for Score {
+    fn add_assign(&mut self, rhs: i32){
+        self.0 += rhs;
+    }
+}
+
+impl SubAssign<i32> for Score {
+    fn sub_assign(&mut self, rhs: i32){
+        self.0 -= rhs;
     }
 }

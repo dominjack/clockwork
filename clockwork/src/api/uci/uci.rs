@@ -14,7 +14,6 @@ use std::sync::{Arc, atomic::AtomicBool};
 use std::thread;
 use std::time::Duration;
 
-/// A struct to hold the information that is sent to the GUI during a search.
 #[derive(PartialEq, Debug)]
 pub enum UciCommand {
     Handshake,
@@ -22,7 +21,7 @@ pub enum UciCommand {
     UciNewGame,
     Position { fen: String, moves: Vec<String> },
     Go { time_control: TimeControl },
-    SetOption,
+    SetOption { name: String, value: Option<String> },
     Stop,
     Quit,
     Hash,
@@ -51,7 +50,7 @@ pub fn parse_uci(cmd: &str, color: Color) -> Result<UciCommand, ()> {
         "ucinewgame" => Ok(UciCommand::UciNewGame),
         "position" => parse_position(&commands[1..]),
         "go" => parse_go(&commands[1..], color),
-        "setoption" => Ok(UciCommand::SetOption),
+        "setoption" => parse_setoption(&commands[1..]),
         "stop" => Ok(UciCommand::Stop),
         "quit" => Ok(UciCommand::Quit),
         "hash" => Ok(UciCommand::Hash),
@@ -71,6 +70,46 @@ fn parse_go(commands: &[&str], color: Color) -> Result<UciCommand, ()> {
     Ok(UciCommand::Go {
         time_control: parse_time(commands, color)?,
     })
+}
+
+fn parse_setoption(commands: &[&str]) -> Result<UciCommand, ()> {
+    let mut name = String::new();
+    let mut value = None;
+
+    let mut i = 0;
+    while i < commands.len() {
+        match commands[i] {
+            "name" => {
+                i += 1;
+                while i < commands.len() && commands[i] != "value" {
+                    if !name.is_empty() {
+                        name.push(' ');
+                    }
+                    name.push_str(commands[i]);
+                    i += 1;
+                }
+            }
+            "value" => {
+                i += 1;
+                let mut val_str = String::new();
+                while i < commands.len() && commands[i] != "name" {
+                    if !val_str.is_empty() {
+                        val_str.push(' ');
+                    }
+                    val_str.push_str(commands[i]);
+                    i += 1;
+                }
+                value = Some(val_str);
+            }
+            _ => i += 1,
+        }
+    }
+
+    if name.is_empty() {
+        return Err(());
+    }
+
+    Ok(UciCommand::SetOption { name, value })
 }
 
 fn parse_time(commands: &[&str], color: Color) -> Result<TimeControl, ()> {
@@ -127,16 +166,13 @@ fn parse_position(commands: &[&str]) -> Result<UciCommand, ()> {
     Ok(UciCommand::Position { fen, moves })
 }
 
-/// Posts the search information to the GUI.
 pub fn post_uci_info(info: UciUpdate) {
-    // 1. Prepare the score string (mate or centipawn)
     let score_string = if let Some(mate_in) = info.score.checkmate_in() {
         format!("score mate {}", mate_in)
     } else {
         format!("score cp {}", info.score.0)
     };
 
-    // 3. Assemble and print the final string in a single call
     let uci_string = format!(
         "info depth {} seldepth {} {} nodes {} nps {:.0} time {} {}",
         info.depth,
@@ -151,7 +187,6 @@ pub fn post_uci_info(info: UciUpdate) {
     println!("{}", uci_string);
 }
 
-/// Posts the best move to the GUI.
 pub fn post_uci_bestmove(mv: Move) {
     println!("bestmove {}", mv);
 }

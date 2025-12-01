@@ -8,23 +8,16 @@ use crate::{
     },
 };
 
-/// Performs an iterative deepening alpha-beta search.
-///
-/// This function starts with a search of depth 1 and then iteratively increases the depth,
-/// using the results from the previous search to improve move ordering for the next one.
-/// It sends UCI info updates after each depth is completed.
-///
-/// # Arguments
-/// * `board` - The board state to search from.
-/// * `thread` - The search thread, which contains the time control and transposition table.
 pub fn iterative_absearch(mut board: Board, mut thread: SearchThread) {
     let max_depth = thread.tc.max_depth();
     let mut alpha = -Score::INFINITY;
     let mut beta = Score::INFINITY;
 
     let mut bestmove = None;
+    thread.tt.lock().unwrap().age();
 
     for depth in 1..(max_depth + 1) as u8 {
+        //thread.tt.lock().unwrap().clear();
         let score =
             ABSearch::new(&mut board, &mut thread).search(SearchParams::new(alpha, beta, depth));
 

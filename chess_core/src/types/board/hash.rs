@@ -8,7 +8,6 @@ use crate::types::square::Square;
 include!(concat!(env!("OUT_DIR"), "/zobrist_keys.rs"));
 
 impl Board {
-    /// Calculates the Zobrist hash for the current board position.
     pub fn hash(&mut self) -> u64 {
         if self.state.hash == 0 {
             let mut hash = 0;
@@ -46,15 +45,10 @@ impl Board {
     }
 }
 
-/// A struct containing the Zobrist keys for each possible feature of a chess position.
 #[derive(Debug, Clone)]
 pub struct ZobristKeys {
-    /// A key for each piece on each square.
     pub piece_keys: [[u64; 64]; Piece::COUNT],
-    /// A key to XOR when it is black's turn to move.
     pub black_to_move_key: u64,
-    /// Keys for each of the four castling rights.
     pub castling_keys: [u64; 4],
-    /// Keys for each of the eight possible en-passant files.
     pub en_passant_keys: [u64; 8],
 }

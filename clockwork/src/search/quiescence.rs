@@ -28,18 +28,6 @@ impl<'a> QSearch<'a> {
         };
     }
 
-    /// Performs a quiescence search from the current board state.
-    ///
-    /// This search only considers captures and promotions to stabilize the evaluation
-    /// and avoid the horizon effect. It's a simplified version of alpha-beta search
-    /// that explores volatile positions until they become quiet.
-    ///
-    /// # Arguments
-    /// * `params` - The alpha-beta search parameters (alpha, beta, depth).
-    /// * `ply` - The current search depth.
-    ///
-    /// # Returns
-    /// The best score found for the current player.
     pub fn search(&mut self, mut params: SearchParams, ply: usize) -> Score {
         if let Some(score) = self.stop_search() {
             return score;
@@ -87,12 +75,10 @@ impl<'a> QSearch<'a> {
         params.alpha
     }
 
-    /// Evaluates the current board state if there are no moves.
     fn evaluate(&self) -> Score {
         return evaluate_for(self.board, self.board.state.color);
     }
 
-    /// Checks if the search should be terminated due to time constraints.
     fn stop_search(&self) -> Option<Score> {
         if self.thread.is_over() {
             self.thread.set_terminator(true);

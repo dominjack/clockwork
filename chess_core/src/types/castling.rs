@@ -19,47 +19,38 @@ impl Castling {
         Castling(right)
     }
 
-    /// Removes the white kingside castling right.
     pub fn remove_white_king(&mut self) {
         self.0 &= 0b1011;
     }
 
-    /// Removes the white queenside castling right.
     pub fn remove_white_queen(&mut self) {
         self.0 &= 0b0111;
     }
 
-    /// Removes the black kingside castling right.
     pub fn remove_black_king(&mut self) {
         self.0 &= 0b1110;
     }
 
-    /// Removes the black queenside castling right.
     pub fn remove_black_queen(&mut self) {
         self.0 &= 0b1101;
     }
 
-    /// Checks if white has kingside castling rights.
     pub fn white_king(&self) -> bool {
         (self.0 & 0b0100) != 0
     }
 
-    /// Checks if white has queenside castling rights.
     pub fn white_queen(&self) -> bool {
         (self.0 & 0b1000) != 0
     }
 
-    /// Checks if black has kingside castling rights.
     pub fn black_king(&self) -> bool {
         (self.0 & 0b0001) != 0
     }
 
-    /// Checks if black has queenside castling rights.
     pub fn black_queen(&self) -> bool {
         (self.0 & 0b0010) != 0
     }
 
-    /// Converts the castling rights to a FEN string.
     pub fn to_fen_string(&self) -> String {
         let mut fen = String::new();
         if self.0 == 0 {
@@ -81,9 +72,6 @@ impl Castling {
         fen
     }
 
-    /// Gets the possible castling moves for a given color.
-    /// Returns a vector of tuples, where each tuple contains a bitboard of the squares
-    /// that must be empty for the castling to be legal, and the castling move itself.
     pub fn get_castling_possibilities(&self, color: Color) -> Vec<(Bitboard, Move)> {
         if color == Color::White {
             match self.0 >> 2 {
@@ -137,7 +125,6 @@ impl Castling {
     }
 }
 
-/// Parses a FEN castling string and creates a `Castling` struct from it.
 impl TryFrom<&str> for Castling {
     type Error = ();
 

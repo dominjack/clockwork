@@ -2,7 +2,6 @@ use crate::types::color::Color;
 use std::fmt;
 use std::mem;
 
-/// Represents a chess piece with its color.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Piece {
     WhitePawn,
@@ -19,7 +18,6 @@ pub enum Piece {
     BlackKing,
 }
 
-/// Represents a type of chess piece, without color.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum PieceType {
     Pawn,
@@ -35,10 +33,8 @@ impl PieceType {
 }
 
 impl Piece {
-    /// The number of distinct piece types for both colors.
     pub const COUNT: usize = 12;
 
-    /// Gets the `PieceType` of the piece, ignoring its color.
     pub fn piece_type(&self) -> PieceType {
         if *self as usize <= 5 {
             unsafe { mem::transmute(*self as u8) }
@@ -47,7 +43,6 @@ impl Piece {
         }
     }
 
-    /// Gets the `Color` of the piece.
     pub fn color(&self) -> Color {
         if *self as usize <= 5 {
             Color::White
@@ -56,7 +51,6 @@ impl Piece {
         }
     }
 
-    /// Converts the piece to its character representation (e.g., 'P' for white pawn, 'p' for black pawn).
     pub fn to_char(&self) -> char {
         match self {
             Piece::WhitePawn => 'P',
@@ -75,7 +69,6 @@ impl Piece {
     }
 }
 
-/// Converts a `usize` to a `Piece`.
 impl TryFrom<usize> for Piece {
     type Error = &'static str;
     fn try_from(value: usize) -> Result<Self, Self::Error> {
@@ -93,7 +86,6 @@ impl fmt::Display for Piece {
     }
 }
 
-/// Converts a `char` to a `Piece`.
 impl TryFrom<&char> for Piece {
     type Error = &'static str;
 

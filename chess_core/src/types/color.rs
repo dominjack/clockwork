@@ -1,4 +1,3 @@
-/// Represents the color of a piece or the current player to move.
 #[derive(Copy, Clone, Eq, PartialEq, Debug, serde::Serialize)]
 pub enum Color {
     White,
@@ -7,10 +6,8 @@ pub enum Color {
 }
 
 impl Color {
-    /// The number of colors (White and Black).
     pub const COUNT: usize = 2;
 
-    /// Converts the color to a single character representation.
     pub fn to_string(&self) -> char {
         match self {
             Color::White => 'w',
@@ -19,7 +16,6 @@ impl Color {
         }
     }
 
-    /// Returns the opposite color.
     pub fn invert(&self) -> Self {
         match self {
             Color::White => Color::Black,
@@ -29,7 +25,6 @@ impl Color {
     }
 }
 
-/// Parses a color from a string ("w" or "b").
 impl TryFrom<&str> for Color {
     type Error = ();
 

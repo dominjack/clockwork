@@ -1,5 +1,4 @@
-//! This module contains the core data structures used to represent the state of a chess game,
-//! such as the board, pieces, moves, and colors.
+
 
 pub mod bitboard;
 pub mod board;

@@ -6,26 +6,19 @@ use chess_core::types::{
     piece::{Piece, PieceType},
 };
 
-fn game_state(board: &Board) {
-    let mut phase = 0;
-    phase += board.pieces[PieceType::Knight as usize].count() as u8 * KNIGHT_PHASE_VALUE;
-    phase += board.pieces[PieceType::Bishop as usize].count() as u8 * BISHOP_PHASE_VALUE;
-    phase += board.pieces[PieceType::Rook as usize].count() as u8 * ROOK_PHASE_VALUE;
-    phase += board.pieces[PieceType::Queen as usize].count() as u8 * QUEEN_PHASE_VALUE;
-    phase.clamp(0, PHASE_SCALE);
-}
-
-/// Calculates the piece-square table evaluation for the current board state.
-pub fn evaluate_location(board: &Board) -> i32 {
-    let mut score = 0;
-    for num in 0..5 {
+pub fn evaluate_location(board: &Board, phase: i32) -> i32 {
+    let mut score_mg = 0i32;
+    let mut score_eg = 0i32;
+    for num in 0..6 {
         for n in (board.pieces[num] & board.colors[Color::White as usize]) {
-            score += PIECE_SQUARE_TABLES[num][invert(n as usize)]
+            score_mg += PIECE_SQUARE_TABLES_MG[num][invert(n as usize)];
+            score_eg += PIECE_SQUARE_TABLES_EG[num][invert(n as usize)];
         }
         for n in (board.pieces[num] & board.colors[Color::Black as usize]) {
-            score -= PIECE_SQUARE_TABLES[num][n as usize]
+            score_mg -= PIECE_SQUARE_TABLES_MG[num][n as usize];
+            score_eg -= PIECE_SQUARE_TABLES_EG[num][n as usize];
         }
     }
 
-    score
+    (score_eg * (PHASE_SCALE - phase) + (score_mg * phase)) / PHASE_SCALE
 }

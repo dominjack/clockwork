@@ -1,8 +1,7 @@
-// This file is auto-generated. Do not edit manually.
-// Run the program containing precalc_magics_to_file to regenerate it.
+
 
 #[derive(Debug, Clone, Copy)]
-#[repr(C)] // Optional: for layout guarantees
+#[repr(C)]
 pub struct MagicEntry {
     pub mask: u64,
     pub magic: u64,
@@ -12,13 +11,13 @@ pub struct MagicEntry {
 }
 
 impl MagicEntry {
-    #[rustfmt::skip] // Optional: if lines get too long
+    #[rustfmt::skip]
     pub const fn new(mask: u64, magic: u64, shift: u8, offset: usize, size: usize) -> Self {
         Self { mask, magic, shift, offset, size }
     }
 }
 
-#[rustfmt::skip] // Optional: to prevent reformatting
+#[rustfmt::skip]
 pub static ROOK_MAGICS: [MagicEntry; 64] = [
     MagicEntry::new(0x000101010101017E, 0x8004104402082200, 51, 0, 4305), // Index 0
     MagicEntry::new(0x000202020202027C, 0x8010000400080010, 51, 4305, 2048), // Index 1
@@ -85,7 +84,7 @@ pub static ROOK_MAGICS: [MagicEntry; 64] = [
     MagicEntry::new(0x3E40404040404000, 0x0401000080402401, 51, 129226, 5872), // Index 62
     MagicEntry::new(0x7E80808080808000, 0x180C020010402081, 51, 135098, 7936), // Index 63
 ];
-#[rustfmt::skip] // Optional: to prevent reformatting
+#[rustfmt::skip]
 pub static BISHOP_MAGICS: [MagicEntry; 64] = [
     MagicEntry::new(0x0040201008040200, 0x0004008020400401, 52, 0, 253), // Index 0
     MagicEntry::new(0x0000402010080400, 0x2000204040080040, 52, 253, 122), // Index 1

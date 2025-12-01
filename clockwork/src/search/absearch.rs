@@ -43,6 +43,15 @@ impl<'a> ABSearch<'a> {
 
         let in_check = self.board.is_in_check();
 
+        if in_check{
+            params.depth += 1
+        }        
+
+        if let Some(score) = self.null_move_pruning(&params, in_check) {
+            return score;
+        }
+        
+
         if let Some(score) = self.quiescence_search(&params) {
             return score;
         }
@@ -77,11 +86,21 @@ impl<'a> ABSearch<'a> {
             }
             if score >= params.beta {
                 self.store_transposition_table(mv, score, params.depth, TableEntryFlag::Cut);
+
+                if mv.is_quiet() {
+                    self.thread.heuristics.killers.store(mv, self.ply);
+                }
+
                 return params.beta;
             }
             if score > params.alpha {
                 params.alpha = score;
                 kind = TableEntryFlag::Pv;
+
+                if mv.is_quiet() {
+                    self.thread.heuristics.history.store(mv, params.depth as usize);
+                }
+
             }
         }
 
@@ -93,7 +112,6 @@ impl<'a> ABSearch<'a> {
         params.alpha
     }
 
-    /// Checks if the game is over and returns the appropriate score if so.
     pub fn is_game_over(&self, searched_moves: u32, in_check: bool) -> Option<Score> {
         if searched_moves > 0 {
             return None;
@@ -104,6 +122,23 @@ impl<'a> ABSearch<'a> {
                 return Some(Score::DRAW);
             }
         }
+    }
+
+    fn null_move_pruning(&mut self, params: &SearchParams, in_check: bool) -> Option<Score>{
+        if params.depth >= 3 && !in_check{
+            let ep = self.board.state.en_passant;
+            self.board.apply_null_move();
+            let score = -self.search(SearchParams {
+                alpha: -params.beta,
+                beta: -params.beta + 1,
+                depth: params.depth - 3,
+            });
+            self.board.undo_null_move(ep);
+            if score >= params.beta{
+                return Some(params.beta)
+            }
+        }
+        return None;
     }
 
     fn negamax(
@@ -120,7 +155,7 @@ impl<'a> ABSearch<'a> {
                 depth: params.depth - 1,
             });
         } else {
-            let reduction = 2;
+            let reduction = 2; 
             let is_deep = params.depth >= 3;
             let is_simple = mv.is_quiet() && !mv.is_promotion();
             let do_lmr = is_deep && is_simple && !in_check;
@@ -131,7 +166,7 @@ impl<'a> ABSearch<'a> {
                     depth: params.depth - reduction,
                 });
             } else {
-                let reduction = if in_check { 0 } else { 1 };
+                let reduction = 1;
                 return -self.search(SearchParams {
                     alpha: -params.beta,
                     beta: -params.alpha,
@@ -182,7 +217,7 @@ impl<'a> ABSearch<'a> {
     fn probe_transposition_table(&self, params: &SearchParams) -> Option<Score> {
         let hash = self.board.state.hash;
         let binding = self.thread.tt.lock().unwrap();
-        let result = binding.probe(hash, params.depth);
+        let result = binding.probe(hash, self.ply);
         let score = result.and_then(|entry| entry.get_score(params));
         score
     }
@@ -195,14 +230,7 @@ impl<'a> ABSearch<'a> {
         flag: TableEntryFlag,
     ) {
         let hash = self.board.state.hash;
-        let entry = TTEntry {
-            zobrist_hash: hash,
-            best_move: mv,
-            score: score,
-            depth: depth,
-            flag: flag,
-        };
         let mut binding = self.thread.tt.lock().unwrap();
-        binding.store(entry);
+        binding.store(hash, mv, score, depth, flag, self.ply);
     }
 }

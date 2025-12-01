@@ -4,14 +4,12 @@ use crate::types::bitboard::Bitboard;
 use crate::types::color::Color;
 use crate::types::square::Square;
 
-/// Calculates the index into the magic bitboard attack table.
 fn get_magic_index(magic: &MagicEntry, blockers: Bitboard) -> usize {
     let index = blockers & magic.mask;
     let _index = (index * magic.magic).0 >> magic.shift;
     _index as usize + magic.offset
 }
 
-/// Looks up the attacks for a bishop on a given square, using magic bitboards.
 pub fn lookup_bishop(sq: Square, blockers: Bitboard) -> Bitboard {
     unsafe {
         let magic = BISHOP_MAGICS.get_unchecked(sq as usize);
@@ -20,7 +18,6 @@ pub fn lookup_bishop(sq: Square, blockers: Bitboard) -> Bitboard {
     }
 }
 
-/// Looks up the attacks for a rook on a given square, using magic bitboards.
 pub fn lookup_rook(sq: Square, blockers: Bitboard) -> Bitboard {
     unsafe {
         let magic = ROOK_MAGICS.get_unchecked(sq as usize);
@@ -29,12 +26,10 @@ pub fn lookup_rook(sq: Square, blockers: Bitboard) -> Bitboard {
     }
 }
 
-/// Looks up the attacks for a queen on a given square.
 pub fn lookup_queen(sq: Square, blockers: Bitboard) -> Bitboard {
     lookup_bishop(sq, blockers) | lookup_rook(sq, blockers)
 }
 
-/// Looks up the capture attacks for a pawn on a given square.
 pub fn lookup_pawn_captures(sq: Square, color: Color) -> Bitboard {
     let mut targets = Bitboard::new(0);
 
@@ -58,7 +53,6 @@ pub fn lookup_pawn_captures(sq: Square, color: Color) -> Bitboard {
     targets
 }
 
-/// Looks up the attacks for a knight on a given square.
 pub fn lookup_knight(sq: Square) -> Bitboard {
     let mut moves_bb = Bitboard::new(0);
 
@@ -91,7 +85,6 @@ pub fn lookup_knight(sq: Square) -> Bitboard {
     moves_bb
 }
 
-/// Looks up the attacks for a king on a given square.
 pub fn lookup_king(sq: Square) -> Bitboard {
     let mut moves_bb = Bitboard::new(0);
     let sq_ind = sq.to_index();

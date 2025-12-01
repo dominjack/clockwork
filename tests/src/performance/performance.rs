@@ -104,7 +104,7 @@ pub fn test() {
         "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", // 8. Promotion test (multiple promotions)
         "r1k4r/p7/2N1b3/2N1b3/8/8/8/R1K4R w - - 0 1", // 9. Check-heavy position
         "8/7p/5kp1/5p2/p1P2P2/P5P1/8/6K1 w - - 0 1", // 10. Simple pawn endgame (from original list)
-        // --- Added 10 More Positions ---
+        // --- Additional positions ---
         "r3k2r/pppb1ppp/1b3n2/nP6/B7/S1P1P3/P3N1PP/R1B1K2R w KQkq - 1 12", // 11. Castling rights test (long/short available)
         "r1bqk2r/ppp2ppp/2n5/3p4/3Pn3/2B2N2/PPP2PPP/R2QKB1R w KQkq - 0 8", // 12. Common opening (Scotch Game)
         "3k4/3p4/8/K1P4r/8/8/8/8 b - - 0 1", // 13. Rook endgame (simple)

@@ -3,24 +3,15 @@ use colored::Colorize;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-/// Represents a magic bitboard entry for a single square.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct MagicEntry {
-    /// A mask that contains the relevant blocker squares for a given piece on a given square.
     pub mask: Bitboard,
-    /// The magic number for this square.
     pub magic: u64,
-    /// The number of bits to shift the result of the magic multiplication.
     pub shift: u8,
-    /// The offset into the global attack table for this square.
     pub offset: usize,
-    /// The number of entries in the attack table for this square.
     pub size: usize,
 }
 
-/// Generates the blocker mask for a rook on a given square.
-/// The blocker mask includes all squares on the rank and file of the given square,
-/// excluding the edges.
 pub fn generate_rook_blocker_mask(sq: u8) -> Bitboard {
     let mut mask = Bitboard::new(0);
     let r = sq / 8;
@@ -52,9 +43,6 @@ pub fn generate_rook_blocker_mask(sq: u8) -> Bitboard {
     mask
 }
 
-/// Generates the blocker mask for a bishop on a given square.
-/// The blocker mask includes all squares on the diagonals of the given square,
-/// excluding the edges.
 pub fn generate_bishop_blocker_mask(sq: u8) -> Bitboard {
     let mut mask = Bitboard::new(0);
     let mut t1 = true;
@@ -100,7 +88,6 @@ pub fn generate_bishop_blocker_mask(sq: u8) -> Bitboard {
     mask
 }
 
-/// Generates all possible blocker configurations (subsets) for a given blocker mask.
 pub fn get_blocker_subsets(mask: Bitboard) -> Vec<Bitboard> {
     let mut subsets = Vec::new();
     let mut subset = Bitboard::new(0);
@@ -119,7 +106,6 @@ pub fn get_blocker_subsets(mask: Bitboard) -> Vec<Bitboard> {
     subsets
 }
 
-/// Calculates the attack bitboard for a rook on a given square with a given blocker configuration.
 pub fn calculate_rook_attacks(sq: usize, blockers: Bitboard) -> Bitboard {
     let mut attacks = Bitboard::new(0);
     let r_start = sq / 8;
@@ -147,7 +133,6 @@ pub fn calculate_rook_attacks(sq: usize, blockers: Bitboard) -> Bitboard {
     attacks
 }
 
-/// Calculates the attack bitboard for a bishop on a given square with a given blocker configuration.
 fn calculate_bishop_attacks(sq: usize, blockers: Bitboard) -> Bitboard {
     let mut attacks = Bitboard::new(0);
     let r_start = sq / 8;
@@ -174,10 +159,6 @@ fn calculate_bishop_attacks(sq: usize, blockers: Bitboard) -> Bitboard {
     attacks
 }
 
-/// Finds a magic number for a given square and piece type.
-/// This is the core of the magic bitboard generation. It works by trying random
-/// magic numbers until it finds one that maps all possible blocker configurations
-/// to a unique index in the attack table.
 pub fn generate_magic(
     sq: u8,
     is_rook: bool,
@@ -270,18 +251,16 @@ pub fn generate_magic(
     }
 }
 
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
-/// Generates magic numbers for a given piece type (rook or bishop).
-///
-/// # Arguments
-/// * `index_bits` - The number of bits to use for the magic index.
-/// * `is_rook` - A boolean indicating whether to generate magics for a rook or a bishop.
-/// * `offset` - The offset into the global attack table for this square.
 fn generate_type_magics(index_bits: u8, is_rook: bool, offset: usize) -> Vec<MagicEntry> {
-    (0..64u8)
-        .into_par_iter()
-        .map(|sq| {
+    #[cfg(feature = "parallel")]
+    let iter = (0..64u8).into_par_iter();
+    #[cfg(not(feature = "parallel"))]
+    let iter = (0..64u8).into_iter();
+
+    iter.map(|sq| {
             if is_rook {
                 generate_magic(sq, true, index_bits, offset)
                     .unwrap_or_else(|| panic!("No magic found for rook on square {}", sq))
@@ -293,16 +272,21 @@ fn generate_type_magics(index_bits: u8, is_rook: bool, offset: usize) -> Vec<Mag
         .collect::<Vec<MagicEntry>>()
 }
 
-/// Generates all magic numbers and attack tables for both rooks and bishops.
 pub fn generate_all_magics_and_attacks() -> (
     Vec<MagicEntry>,
     Vec<Bitboard>,
     Vec<MagicEntry>,
     Vec<Bitboard>,
 ) {
+    #[cfg(feature = "parallel")]
     let (rook_magics, bishop_magics) = rayon::join(
         || generate_type_magics(13, true, 0),
         || generate_type_magics(12, false, 0),
+    );
+    #[cfg(not(feature = "parallel"))]
+    let (rook_magics, bishop_magics) = (
+        generate_type_magics(13, true, 0),
+        generate_type_magics(12, false, 0),
     );
 
     let (rook_magics, rook_attacks) = {
@@ -318,11 +302,6 @@ pub fn generate_all_magics_and_attacks() -> (
     (rook_magics, rook_attacks, bishop_magics, bishop_attacks)
 }
 
-/// Generates the attack tables for a given piece type (rook or bishop).
-///
-/// # Arguments
-/// * `magics` - A vector of magic entries for the piece type.
-/// * `is_rook` - A boolean indicating whether to generate attack tables for a rook or a bishop.
 pub fn generate_type_attack_tables(magics: &Vec<MagicEntry>, is_rook: bool) -> Vec<Vec<Bitboard>> {
     let mut attack_tables = Vec::<Vec<Bitboard>>::new();
     if is_rook {
@@ -357,11 +336,6 @@ pub fn generate_type_attack_tables(magics: &Vec<MagicEntry>, is_rook: bool) -> V
     attack_tables
 }
 
-/// Reformats the magic entries and attack tables.
-///
-/// # Arguments
-/// * `magics` - A vector of magic entries.
-/// * `attack_tables` - A vector of attack tables.
 pub fn reformat_magics_attack_tables(
     mut magics: Vec<MagicEntry>,
     attack_tables: Vec<Vec<Bitboard>>,

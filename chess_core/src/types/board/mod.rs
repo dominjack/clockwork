@@ -1,5 +1,4 @@
-//! This module contains the core board representation and related logic,
-//! including move generation, move application, and FEN parsing.
+
 
 pub mod applymove;
 pub mod board;

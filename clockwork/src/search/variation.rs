@@ -5,7 +5,6 @@ use chess_core::types::board::board::Board;
 use chess_core::types::moves::Move;
 
 const MAX_PLY: usize = 64;
-/// Represents the Principal Variation (a sequence of best moves).
 #[derive(Debug, Clone, Default)]
 pub struct Variation(ArrayVec<Move, MAX_PLY>);
 
@@ -45,10 +44,8 @@ impl Variation {
 }
 
 impl fmt::Display for Variation {
-    /// Formats the variation as a string of LAN moves, separated by spaces.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let pv_string = if !self.0.is_empty() {
-            // Use an iterator chain to map moves to their LAN strings and join them
             let moves_str: String = self
                 .0
                 .as_slice()
@@ -57,7 +54,6 @@ impl fmt::Display for Variation {
                 .collect::<Vec<String>>()
                 .join(" ");
 
-            // Return the " pv " prefix followed by the joined moves
             write!(f, "{}", moves_str)
         } else {
             write!(f, "")
