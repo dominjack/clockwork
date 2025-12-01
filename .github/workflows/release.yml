@@ -3,7 +3,10 @@ name: Release
 on:
   push:
     tags:
-      - "v*" # Triggers only when you push a tag like v1.0, v0.2.1, etc.
+      - "v*" # Triggers on tags like v1.0.0, v0.2, etc.
+
+permissions:
+  contents: write # REQUIRED: Allows the action to create the release
 
 jobs:
   build-and-release:
@@ -12,15 +15,20 @@ jobs:
     strategy:
       matrix:
         include:
+          # Linux Configuration
           - os: ubuntu-latest
             artifact_name: clockwork-linux
-            asset_name: clockwork-linux
+            original_name: clockwork
+            
+          # Windows Configuration
           - os: windows-latest
             artifact_name: clockwork-windows.exe
-            asset_name: clockwork-windows.exe
+            original_name: clockwork.exe
+            
+          # Mac Configuration
           - os: macos-latest
             artifact_name: clockwork-mac
-            asset_name: clockwork-mac
+            original_name: clockwork
 
     steps:
       - name: Checkout code
@@ -28,16 +36,21 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Build (Rust)
-        run: cargo build --release
-      - name: Rename Binary
-        run: mv target/release/clockwork${{ matrix.os == 'windows-latest' && '.exe' || '' }} ${{ matrix.artifact_name }}
 
-      - name: Upload Binary to Release
-        uses: svenstaro/upload-release-action@v2
+      - name: Build Engine
+        # Builds the binary in release mode (highly optimized)
+        run: cargo build --release
+
+      - name: Rename Binary
+        shell: bash
+        run: mv target/release/${{ matrix.original_name }} ${{ matrix.artifact_name }}
+
+      - name: Create Release and Upload
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
-          tag: ${{ github.ref }}
-          overwrite: true
+          files: ${{ matrix.artifact_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
