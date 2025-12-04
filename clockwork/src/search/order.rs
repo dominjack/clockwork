@@ -27,13 +27,9 @@ pub struct MoveOrder {
 }
 
 impl MoveOrder {
-    pub fn absearch(board: &mut Board, ply: usize, thread: &SearchThread) -> Self {
-        let binding = thread.tt.lock().unwrap();
-        let cached = binding
-            .probe(board.state.hash, ply)
-            .map(|entry| entry.best_move);
+    pub fn absearch(board: &mut Board, ply: usize, thread: &SearchThread, tt_move: Option<Move>) -> Self {
         let moves = board.generate_all_moves();
-        Self::build(cached, AB_METHODS, board, ply, thread, &moves)
+        Self::build(tt_move, AB_METHODS, board, ply, thread, &moves)
     }
 
     pub fn qsearch(board: &mut Board, ply: usize, thread: &SearchThread) -> Self {

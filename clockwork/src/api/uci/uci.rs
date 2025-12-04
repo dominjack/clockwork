@@ -168,6 +168,7 @@ fn parse_position(commands: &[&str]) -> Result<UciCommand, ()> {
 
 pub fn post_uci_info(info: UciUpdate) {
     let score_string = if let Some(mate_in) = info.score.checkmate_in() {
+        println!("Score {:?}", info.score);
         format!("score mate {}", mate_in)
     } else {
         format!("score cp {}", info.score.0)

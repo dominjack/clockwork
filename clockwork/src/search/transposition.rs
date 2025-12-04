@@ -128,7 +128,7 @@ impl TranspositionTable {
         flag: TableEntryFlag,
         ply: usize,
     ) {
-        if self.table.is_empty() || best_move == Move::NONE {
+        if self.table.is_empty() || best_move == Move::NONE || score == Score::INVALID || score == -Score::INVALID {
             return;
         }
 
@@ -166,7 +166,7 @@ impl TranspositionTable {
 
         // Verify the hash matches (to avoid collisions)
         // and that the entry has enough depth to be useful.
-        if entry.zobrist_hash == zobrist_hash && entry.flag != TableEntryFlag::None && entry.age == self.age{
+        if entry.zobrist_hash == zobrist_hash && entry.flag != TableEntryFlag::None {
             //entry.adjust_mate_score(ply as i32);
             Some(entry)
         } else {

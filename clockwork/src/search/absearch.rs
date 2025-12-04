@@ -58,8 +58,12 @@ impl<'a> ABSearch<'a> {
 
         self.thread.nodes += 1;
 
-        if let Some(score) = self.probe_transposition_table(&params) {
-            return score;
+        let mut tt_move = None;
+        if let Some(entry) = self.probe_tt() {
+            if let Some(score) = entry.get_score(&params) {
+                return score;
+            }
+            tt_move = Some(entry.best_move);
         }
 
         let mut best_move: Move = Move::NONE;
@@ -68,8 +72,7 @@ impl<'a> ABSearch<'a> {
 
         let mut searched_nodes: u32 = 0;
 
-        //let moves = self.board.generate_all_moves();
-        let mut order = MoveOrder::absearch(self.board, self.ply, self.thread);
+        let mut order = MoveOrder::absearch(self.board, self.ply, self.thread, tt_move);
 
         while let Some(mv) = order.next() {
             if self.board.apply_move(&mv).is_err() {
@@ -84,6 +87,7 @@ impl<'a> ABSearch<'a> {
                 best_score = score;
                 best_move = mv;
             }
+
             if score >= params.beta {
                 self.store_transposition_table(mv, score, params.depth, TableEntryFlag::Cut);
 
@@ -160,11 +164,20 @@ impl<'a> ABSearch<'a> {
             let is_simple = mv.is_quiet() && !mv.is_promotion();
             let do_lmr = is_deep && is_simple && !in_check;
             if do_lmr {
-                return -self.search(SearchParams {
+                let score = -self.search(SearchParams {
                     alpha: -params.beta,
                     beta: -params.alpha,
                     depth: params.depth - reduction,
                 });
+
+                if score > params.alpha {
+                    return -self.search(SearchParams {
+                        alpha: -params.beta,
+                        beta: -params.alpha,
+                        depth: params.depth - 1,
+                    });
+                }
+                return score;
             } else {
                 let reduction = 1;
                 return -self.search(SearchParams {
@@ -214,12 +227,10 @@ impl<'a> ABSearch<'a> {
         None
     }
 
-    fn probe_transposition_table(&self, params: &SearchParams) -> Option<Score> {
+    fn probe_tt(&self) -> Option<TTEntry> {
         let hash = self.board.state.hash;
         let binding = self.thread.tt.lock().unwrap();
-        let result = binding.probe(hash, self.ply);
-        let score = result.and_then(|entry| entry.get_score(params));
-        score
+        binding.probe(hash, self.ply)
     }
 
     fn store_transposition_table(
